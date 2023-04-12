@@ -419,4 +419,23 @@ def see_us_home(screen, circle_center, destination, piece):
         move_circle(screen, circle_center, get_screen_pos(14,2), 3, piece)
         move_circle(screen, get_screen_pos(14,2) , destination, 3, piece)
 
+def calculate_health(time_to_zero, start_time):
+    # Set up the health bar
+    health_width = width*2
+    health_height = 20
+    health_x = 100
+    health_y = 50
+    health = health_width
 
+    # Calculate the time elapsed since the start of the game
+    time_elapsed = pygame.time.get_ticks() - start_time
+
+    # Calculate the health percentage based on the time elapsed
+    health_percent = (time_to_zero - time_elapsed) / time_to_zero
+    if health_percent < 0:
+        health_percent = 0
+
+    # Calculate the current health based on the health percentage
+    health = health_width * health_percent
+
+    return health

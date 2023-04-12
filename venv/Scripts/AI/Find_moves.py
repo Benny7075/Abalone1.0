@@ -483,8 +483,6 @@ def play_move(board, move, piece, opp_piece, knock_off = False):
 
 
 def undo_move(board, move, piece, opp_piece):
-    row = -1
-    col = -1
     if len(move) == 2:
         if isinstance(move[0][0], int):
             board[move[0][0]][move[0][1]] = int(piece)

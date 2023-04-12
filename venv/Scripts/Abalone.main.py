@@ -295,6 +295,9 @@ playerliveslist = move_pieces.get_player_lives(playerliveslist)
 timeslist = []
 timeslist = move_pieces.get_level_times(timeslist)
 
+depthlist = []
+depthlist = move_pieces.get_AIlevel(depthlist)
+
 def adjust_board_for_lives_player(board, lives):
     if lives == 1:
         for i in range(2, 7):
@@ -634,8 +637,6 @@ def take_turn(board, row, col, highlighted, getting_pushed, piece):
 level_times = []
 level_times = move_pieces.get_level_times(level_times)
 player_timer = 99999999999999999999
-TIMER_EVENT = pygame.USEREVENT + 1
-pygame.time.set_timer(TIMER_EVENT, 1000)
 turn = 0
 timer = 99999999999999999999
 playing_game = False
@@ -661,13 +662,15 @@ just_broke_out = False
 game_running = True
 in_level_selector = False
 in_level = False
+start_time = pygame.time.get_ticks()
+timer_backup = 9999999999
 while game_running:
     while AIvsAI:
         if turn == 0:
             valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, 2, 3)
-            print(valid_shoves)
             start1 = time.time()
-            move, minimax_score = AI.Minimax2(board, 2, -math.inf, math.inf, 2, True)
+            move, minimax_score = AI.Minimax3(board, 3, -math.inf, math.inf, 2, True, {})
+         #   move, minimax_score = AI.iterative_deepener(5, board, -math.inf, math.inf, 2)
             print("black")
             end1 = time.time()
             print(end1 - start1)
@@ -676,7 +679,7 @@ while game_running:
             last2 = movelist1[-3:]
             if len(last2) == 3:
                 if last2[0] == last2[2]:
-                    move, minimax_score = AI.Minimax2(board, 2, -math.inf, math.inf, 2, True, move)
+                    move, minimax_score = AI.Minimax2(board, 3, -math.inf, math.inf, 2, True, move)
             board, knock_off, row, col = AI.play_move(board, move, 2, 3, knock_off)
             knocked_piece = 3
             if knock_off:
@@ -699,8 +702,8 @@ while game_running:
             valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, 3, 2)
             start2 = time.time()
             move, minimax_score = AI.Minimax(board, 3, -math.inf, math.inf, 3, True)
-            print(minimax_score)
             print("white:")
+            print(minimax_score)
             end2 = time.time()
             print(end2 - start2)
             board, knock_off, row, col = AI.play_move(board, move, 3, 2, knock_off)
@@ -708,7 +711,7 @@ while game_running:
             last2 = movelist2[-3:]
             if len(last2) == 3:
                 if last2[0] == last2[2]:
-                    move, minimax_score = AI.Minimax(board, 2, -math.inf, math.inf, 3, True, move)
+                    move, minimax_score = AI.Minimax(board, 3, -math.inf, math.inf, 3, True, move)
 
             board, knock_off, row, col = AI.play_move(board, move, 3, 2, knock_off)
             knocked_piece = 2
@@ -787,13 +790,13 @@ while game_running:
                     in_menu = False
 
                     # change these 3
-                    playing_game = True
-                    CPU = True
-                    AIvsAI = False
+          #          playing_game = True
+           #         CPU = True
+            #        AIvsAI = False
 
-             #       playing_game = False
-              #      CPU = False
-               #     AIvsAI = True
+                    playing_game = False
+                    CPU = False
+                    AIvsAI = True
 
                     in_level_selector = False
                     move_pieces.draw_board(board)
@@ -822,25 +825,7 @@ while game_running:
 
 
     while playing_game:
-        if timer >= 1:
-            if player_timer <= 0:
-                turn += 1
-                turn = turn % 2
-                if not in_level:
-                    if turn == 0:
-                        board[0][9] = 200
-                    if turn == 1:
-                        board[0][9] = 300
-                player_timer = timer
-                run_the_loop = False
-                clean_board(board)
-                for pos in highlighted:
-                    unhighlight(board, pos[0], pos[1], 20)
-                    unhighlight(board, pos[0], pos[1], 30)
-                highlighted = []
-                picked_pieces = False
         if turn_swapped:
-            player_timer = timer
             if knock_off == True:
                 player_timer += 3
             turn_swapped = False
@@ -848,8 +833,6 @@ while game_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            if event.type == TIMER_EVENT:
-                player_timer -= 1
             if pygame.mouse.get_pressed()[0]:
                 posx ,posy = pygame.mouse.get_pos()
                 row, col = get_board_pos(posx, posy)
@@ -866,12 +849,15 @@ while game_running:
                         # possibly remove this board creation, think obout creating seperate boards for ai and 2 player
                         board = move_pieces.create_board()
                         just_broke_out = True
+                        player_timer = 9999999999
                         continue
                 cx, cy = get_screen_pos(2, 9)
+                # timer
                 if start_and_menu.is_point_inside_circle(posx, posy, cx, cy, RADIUS + 10):
                     player_timer = start_and_menu.time_selection(screen)
-                    timer = player_timer
-                    if player_timer == -1:
+                    timer_backup = player_timer
+                    start_time = pygame.time.get_ticks()
+                    if player_timer == -1 or player_timer == 0:
                         player_timer = 99999999999999999999
                 if not in_level:
                     if restart_available:
@@ -880,6 +866,7 @@ while game_running:
                             save_board = copy.deepcopy(board)
                             board = move_pieces.create_board()
                             board[row][col] = 666
+                            start_time = pygame.time.get_ticks()
                             if CPU:
                                 board[2][9] = 0
                                 move_pieces.draw_board(board)
@@ -919,6 +906,7 @@ while game_running:
                             if not in_level:
                                 board[0][9] = 300
                             turn_swapped = True
+                            start_time = pygame.time.get_ticks()
                         clean_board(board)
 
                         if not in_level:
@@ -950,6 +938,7 @@ while game_running:
                                 turn = turn % 2
                                 board[0][9] = 200
                                 turn_swapped = True
+                                start_time = pygame.time.get_ticks()
                             clean_board(board)
                             if not in_level:
                                 board[2][0] = 777
@@ -960,10 +949,15 @@ while game_running:
                             picked_pieces = False
                             restart_available = True
 
+
                     if CPU:
+                        depth = 3
+                        if in_level:
+                            depth = depthlist[level]
                         player_timer = 999999999999999999999
-                        legal_moves, shove_moves, knock_moves = AI.get_all_moves(board, 3, 2)
-                        move, minimax_score = AI.Minimax(board, 3, -math.inf, math.inf, 3, True)
+                        print(depth)
+                        move, minimax_score = AI.Minimax(board, depth, -math.inf, math.inf, 3, True)
+                      #  move, minimax_score = AI.iterative_deepener(5, board, -math.inf, math.inf, 3)
                         board, knock_off, row, col = AI.play_move(board, move, 3, 2, knock_off)
                         knocked_piece = 2
                         turn += 1
@@ -1020,14 +1014,37 @@ while game_running:
                 in_level_selector = True
                 r, c = get_board_from_level(level)
                 boards[0][r][c] = 8
-        if player_timer < 500:
-            if timer >= 1:
-                move_pieces.draw_rectangle(0, 10, 2*player_timer*width/time, 10, RED)
+
+        # timer
+        if player_timer < 500 and player_timer != 0:
+            time_left = move_pieces.calculate_health(player_timer*1000, start_time)
+            move_pieces.draw_rectangle(0, 0, time_left, 40, RED)
+            if time_left == 0:
+                start_time = pygame.time.get_ticks()
+                turn += 1
+                turn = turn % 2
+                if not in_level:
+                    if turn == 0:
+                       board[0][9] = 200
+                    if turn == 1:
+                        board[0][9] = 300
+                    player_timer = timer_backup
+                    run_the_loop = False
+                    clean_board(board)
+                    for pos in highlighted:
+                         unhighlight(board, pos[0], pos[1], 20)
+                         unhighlight(board, pos[0], pos[1], 30)
+                    highlighted = []
+                    picked_pieces = False
         pygame.display.update()
+
+
         if knock_off:
             knocked_off(board, row, col, knocked_piece)
             time_delay = False
             board[row][col] = starting_board[row][col]
             knocked_needs_reset = False
+            knock_off = False
+            start_time = pygame.time.get_ticks()
         run_the_loop = True
 

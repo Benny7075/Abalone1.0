@@ -15,13 +15,22 @@ def get_opp_lives(liveslist):
     for i in range(61):
         liveslist.append(6)
     liveslist[1] = 6
+    liveslist[3] = 3
     return liveslist
 
 def get_player_lives(liveslist):
     for i in range(61):
         liveslist.append(6)
     liveslist[1] = 1
+    liveslist[3] = 3
     return liveslist
+
+def get_AIlevel(depthlist):
+    for i in range(61):
+        depthlist.append(1)
+    depthlist[1] = 4
+    depthlist[3] = 3
+    return depthlist
 
 def create_boardLevels():
     board = numpy.zeros((ROW_COUNT, COLUMN_COUNT))
@@ -242,26 +251,32 @@ def create_board3():
     board[14][5] = 50
     board[14][6] = 50
     board[14][7] = 50
-    for i in range(1, 10):
+    for i in range(4, 7):
         board[7][i] = 1
 
     for i in range(2, 8):
         board[2][i] = 9
         board[12][i] = 9
 
-    for i in range(1, 9):
+    for i in range(3, 7):
         board[6][i] = 1
         board[8][i] = 1
-    for i in range(2, 9):
+    for i in range(4, 7):
         board[5][i] = 1
         board[9][i] = 1
-    for i in range(2, 8):
+    for i in range(3, 7):
         board[4][i] = 1
         board[10][i] = 1
-    for i in range(3, 8):
-        board[3][i] = 1
-        board[11][i] = 1
+    for i in range(4, 7):
+        board[3][i] = 3
+        board[11][i] = 2
     board[0][0] = 999
+    board[4][4] = 3
+    board[4][5] = 3
+    board[5][5] = 3
+    board[10][4] = 2
+    board[10][5] = 2
+    board[9][5] = 2
     return board
 
 def create_board4():
