@@ -278,14 +278,24 @@ def find_all_pairs(board, piece):
                             possible_pairs.append([(i, j), (row, col)])
     return possible_pairs
 
+
+def order_three(three):
+    sorted_coords = sorted(three, key=lambda coord: (coord[0], coord[1]))
+    if sorted_coords[0][0] == sorted_coords[1][0]:
+        sorted_coords = sorted(sorted_coords, key=lambda coord: coord[1])
+    return tuple(sorted_coords[2::-1] if sorted_coords[0][0] != sorted_coords[2][0] else sorted_coords)
+
+
 def find_all_threes(board, piece, pairs):
     possible_threes = []
     for i in range(3, 12):
         for j in range(1, 10):
             for pair in pairs:
                 if board[i][j] == piece and selectable3_edited(i, j, pair):
+                    # return three from bottom up to be compatible
                     if (i, j) not in pair:
                         three = [pair[0], pair[1], (i, j)]
+                        three = order_three(three)
                         possible_threes.append(three)
     return possible_threes
 
@@ -296,14 +306,15 @@ def append_3push_moves(board, threes, row, col, legal_moves, legal_shoves, legal
         r1, c1 = three[0]
         r2, c2 = three[1]
         r3, c3 = three[2]
+
         # on same row
         if r1 == r3:
             cmin = min(c1, c2, c3)
             cmax = max(c1, c2, c3)
             for marble in three:
-                if marble[1] != cmin:
-                    first_pair.append(marble)
                 if marble[1] != cmax:
+                    first_pair.append(marble)
+                if marble[1] != cmin:
                     second_pair.append(marble)
         else:
             rmin = min(r1, r2, r3)
@@ -371,7 +382,12 @@ def append_3push_moves(board, threes, row, col, legal_moves, legal_shoves, legal
                                         if board[r][c] == 9:
                                             legal_knocks.append((furthest_marb, (row, col), (roww, coll)))
 
-
+def find_duplicates(lst):
+    duplicates = []
+    for item in lst:
+        if lst.count(item) > 1 and item not in duplicates:
+            duplicates.append(item)
+    return duplicates
 
 legal_moves = []
 def get_all_moves(board, piece, opp_piece):
@@ -380,7 +396,6 @@ def get_all_moves(board, piece, opp_piece):
     legal_knocks = []
     pairs = find_all_pairs(board, piece)
     threes = find_all_threes(board, piece, pairs)
-
     for r in range(3, 12):
         for c in range(1, 10):
             # append all 3pushes
@@ -394,7 +409,7 @@ def get_all_moves(board, piece, opp_piece):
                     else:
                         legal_moves.append((pair[0], (r, c)))
         # shove move recorded as (spot thats moved out of, spot where colour changed, spot pushed piece lands)
-                if board[r][c] == opp_piece and move_pieces.selectable3(r, c, pair):
+                elif board[r][c] == opp_piece and move_pieces.selectable3(r, c, pair):
                     if abs(pair[0][0] - r) + abs(pair[0][1] - c) < abs(pair[1][0] - r) + abs(pair[1][1] - c):
                         furthest_marb = pair[1]
                     else:

@@ -186,148 +186,6 @@ def winning_move(board, piece):
 def is_terminal_node(board):
     return winning_move(board, 2) or winning_move(board, 3)
 
-times = 0
-times2 = 0
-def Minimax(board, depth, alpha, beta, piece, maximising, move = -1):
-    if piece == 2:
-        opp_piece = 3
-    elif piece == 3:
-        opp_piece = 2
-    is_terminal = is_terminal_node(board)
-    if depth == 0 or is_terminal_node(board):
-        if is_terminal:
-            if winning_move(board, piece):
-                return None, 9999999999
-            elif winning_move(board, opp_piece):
-                return None, -9999999999
-        else:
-            global times
-            times += 1
-            print("evaluated this many times: " + str(times))
-         #   return None, evaluate_posRandom(board, piece)
-            return None, evaluate_pos1(board, piece)
-    if maximising:
-        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, piece, opp_piece)
-        if move != -1:
-            if move in valid_moves:
-                valid_moves.remove(move)
-        value = -math.inf
-        move = random.choice(valid_moves)
-        for move in valid_moves:
-     #       b_copy = board.copy()
-      #      b_copy, knock_off, row, col = AI.play_move(b_copy, move, piece, opp_piece)
-       #     new_score = Minimax(b_copy, depth - 1, alpha, beta, piece, False)[1]
-
-            board, knock_off, row, col = AI.play_move(board, move, piece, opp_piece)
-            new_score = Minimax(board, depth - 1, alpha, beta, piece, False)[1]
-            board = AI.undo_move(board, move, piece, opp_piece)
-            if new_score > value:
-                value = new_score
-                best_move = move
-            alpha = max(alpha, value)
-            if alpha >= beta:
-                break
-        return best_move, value
-
-    else:
-        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, opp_piece, piece)
-        value = math.inf
-        move = random.choice(valid_moves)
-        for move in valid_moves:
-    #        b_copy = board.copy()
-     #       b_copy, knock_off, row, col = AI.play_move(b_copy, move, opp_piece, piece)
-      #      new_score = Minimax(b_copy, depth - 1,alpha, beta, piece, True)[1]
-
-            board, knock_off, row, col = AI.play_move(board, move, opp_piece, piece)
-            new_score = Minimax(board, depth - 1, alpha, beta, piece, True)[1]
-            board = AI.undo_move(board, move, opp_piece, piece)
-            if new_score < value:
-                value = new_score
-                best_move = move
-            beta = min(beta, value)
-            if alpha >= beta:
-                break
-        return best_move, value
-
-
-def get_state_key(board):
-    # Convert the board to a string
-    board_str = str(board)
-
-    # Generate a SHA-256 hash of the string
-    hash_obj = hashlib.sha256(board_str.encode())
-    hash_str = hash_obj.hexdigest()
-
-    return hash_str
-
-def Minimax2(board, depth, alpha, beta, piece, maximising, move = -1, trans_table={}):
-    if piece == 2:
-        opp_piece = 3
-    elif piece == 3:
-        opp_piece = 2
-    is_terminal = is_terminal_node(board)
-    if depth == 0 or is_terminal_node(board):
-        if is_terminal:
-            if winning_move(board, piece):
-                return None, 9999999999
-            elif winning_move(board, opp_piece):
-                return None, -9999999999
-        else:
-            pos_score = evaluate_pos1(board, piece)
-            # Generate state key for current board state
-     #       state_key = get_state_key(board)
-      #      trans_table[state_key] = pos_score
-            return None, pos_score
-    if maximising:
-        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, piece, opp_piece)
-        if move == -1:
-            pass
-        else:
-            if move in valid_moves:
-                valid_moves.remove(move)
-        value = -math.inf
-        move = random.choice(valid_moves)
-        for move in valid_moves:
-            b_copy = board.copy()
-            b_copy, knock_off, row, col = AI.play_move(b_copy, move, piece, opp_piece)
-            state_key = get_state_key(b_copy)
-            if state_key in trans_table:
-                new_score = trans_table[state_key]
-            else:
-                new_score = Minimax2(b_copy, depth - 1, alpha, beta, piece, False)[1]
-       #     if move in valid_knocks:
-        #        print(move)
-         #       return move, -1
-            if new_score > value:
-                value = new_score
-                best_move = move
-            alpha = max(alpha, value)
-            if alpha >= beta:
-                break
-        result = best_move, value
-
-    else:
-        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, opp_piece, piece)
-        value = math.inf
-        move = random.choice(valid_moves)
-        for move in valid_moves:
-            b_copy = board.copy()
-            b_copy, knock_off, row, col = AI.play_move(b_copy, move, opp_piece, piece)
-            state_key = get_state_key(b_copy)
-            if state_key in trans_table:
-                new_score = trans_table[state_key]
-            else:
-                new_score = Minimax2(b_copy, depth - 1, alpha, beta, piece, True)[1]
-            if new_score < value:
-                value = new_score
-                best_move = move
-            beta = min(beta, value)
-            if alpha >= beta:
-                break
-        result = best_move, value
-
-    return result
-
 
 def iterative_deepener(timelimit, board, alpha, beta, piece):
     trans_table = {}
@@ -423,85 +281,11 @@ def evaluate_posRandom(board, piece):
     return score
 
 
-def Minimax3(board, depth, alpha, beta, piece, maximising, zobrist_table, move = -1):
-    if piece == 2:
-        opp_piece = 3
-    elif piece == 3:
-        opp_piece = 2
-    is_terminal = is_terminal_node(board)
-    if depth == 0 or is_terminal_node(board):
-        if is_terminal:
-            if winning_move(board, piece):
-                return None, 9999999999
-            elif winning_move(board, opp_piece):
-                return None, -9999999999
-        else:
-            pos_score = evaluate_pos1(board, piece)
-            key = generate_zobrist_key(board)
-            zobrist_table[key] = None, pos_score
-            global times2
-            times2 += 1
-            print("evaluated this many times with hashmap: " + str(times2))
-        #    return None, evaluate_posRandom(board, piece)
-            return None, pos_score
-    if maximising:
-        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, piece, opp_piece)
-        if move != -1:
-            if move in valid_moves:
-                valid_moves.remove(move)
-        value = -math.inf
-        move = random.choice(valid_moves)
-        for move in valid_moves:
-     #       b_copy = board.copy()
-      #      b_copy, knock_off, row, col = AI.play_move(b_copy, move, piece, opp_piece)
-       #     new_score = Minimax3(b_copy, depth - 1, alpha, beta, piece, False)[1]
-
-            board, knock_off, row, col = AI.play_move(board, move, piece, opp_piece)
-        # Look up the Zobrist key for the board state
-            board_key = generate_zobrist_key(board)
-            if board_key in zobrist_table:
-                new_score = zobrist_table[board_key][1]
-            new_score = Minimax3(board, depth - 1, alpha, beta, piece, False, zobrist_table)[1]
-            board = AI.undo_move(board, move, piece, opp_piece)
-            if new_score > value:
-                value = new_score
-                best_move = move
-            alpha = max(alpha, value)
-            if alpha >= beta:
-                break
-        return best_move, value
-
-    else:
-        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, opp_piece, piece)
-        value = math.inf
-        move = random.choice(valid_moves)
-        for move in valid_moves:
-    #        b_copy = board.copy()
-    #        b_copy, knock_off, row, col = AI.play_move(b_copy, move, opp_piece, piece)
-     #       new_score = Minimax3(b_copy, depth - 1,alpha, beta, piece, True)[1]
-
-            board, knock_off, row, col = AI.play_move(board, move, opp_piece, piece)
-             # Look up the Zobrist key for the board state
-            board_key = generate_zobrist_key(board)
-            if board_key in zobrist_table:
-                new_score = zobrist_table[board_key][1]
-            else:
-                new_score = Minimax3(board, depth - 1, alpha, beta, piece, True, zobrist_table)[1]
-            board = AI.undo_move(board, move, opp_piece, piece)
-            if new_score < value:
-                value = new_score
-                best_move = move
-            beta = min(beta, value)
-            if alpha >= beta:
-                break
-        return best_move, value
-
-
 # Initialize the Zobrist keys
 zobrist_keys = [[0 for j in range(COLUMN_COUNT)] for i in range(ROW_COUNT)]
 for i in range(ROW_COUNT):
     for j in range(COLUMN_COUNT):
-        zobrist_keys[i][j] = [random.randint(0, 2**64-1), random.randint(0, 2**64-1)]
+        zobrist_keys[i][j] = [random.randint(0, 2**64-1), random.randint(0, 2**64-1), random.randint(0, 2**64-1), random.randint(0, 2**64-1)]
 
 def generate_zobrist_key(board):
     """
@@ -514,4 +298,9 @@ def generate_zobrist_key(board):
             if piece == 2 or piece == 3:
                 piece_index = int(piece - 2)
                 key ^= zobrist_keys[i][j][piece_index]
+            if piece == 200:
+                key ^= zobrist_keys[i][j][2]
+            if piece == 300:
+                key ^= zobrist_keys[i][j][3]
+
     return key

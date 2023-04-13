@@ -632,8 +632,276 @@ def take_turn(board, row, col, highlighted, getting_pushed, piece):
         return 4
     return 0
 
+evalnum = 0
+def get_center_value(row, col, randomlist = [], random = False):
+    if not random:
+        # center
+        if row == 7 and col == 5:
+            return 2
 
-# Define an event for the timer
+        # layer 1
+        elif (row == 6 or row == 8) and (col == 5 or col == 4):
+            return 1.6
+        elif row == 7 and (col == 4 or col == 6):
+            return 1.6
+
+        # layer 2
+        elif (row == 5 or row == 9) and (col == 6 or col == 5 or col == 4):
+            return 1.3
+        elif (row == 6 or row == 8) and (col == 3 or col == 6):
+            return 1.3
+        elif row == 7 and (col == 3 or col == 7):
+            return 1.3
+
+        # layer 3
+        elif (row == 4 or row == 10) and (col == 6 or col == 5 or col == 4 or col == 3):
+            return 1
+        elif (row == 5 or row == 9) and (col == 7 or col == 3):
+            return 1
+        elif (row == 6 or row == 8) and (col == 2 or col == 7):
+            return 1
+        elif row == 7 and (col == 2 or col == 8):
+            return 1
+
+        # outer layer
+        else:
+            return -1
+    else:
+        # center
+        if row == 7 and col == 5:
+            return randomlist[0]/10
+
+        # layer 1
+        elif (row == 6 or row == 8) and (col == 5 or col == 4):
+            return randomlist[1]/10
+        elif row == 7 and (col == 4 or col == 6):
+            return randomlist[1]/10
+
+        # layer 2
+        elif (row == 5 or row == 9) and (col == 6 or col == 5 or col == 4):
+            return randomlist[2]/10
+        elif (row == 6 or row == 8) and (col == 3 or col == 6):
+            return randomlist[2]/10
+        elif row == 7 and (col == 3 or col == 7):
+            return randomlist[2]/10
+
+        # layer 3
+        elif (row == 4 or row == 10) and (col == 6 or col == 5 or col == 4 or col == 3):
+            return randomlist[3]/10
+        elif (row == 5 or row == 9) and (col == 7 or col == 3):
+            return randomlist[3]/10
+        elif (row == 6 or row == 8) and (col == 2 or col == 7):
+            return randomlist[3]/10
+        elif row == 7 and (col == 2 or col == 8):
+            return randomlist[3]/10
+
+        # outer layer
+        else:
+            return -1
+
+def evaluate_pos1(board, piece):
+    global evalnum
+    evalnum += 1
+    piececount = 0
+    opp_piececount = 0
+    if piece == 2:
+        opp_piece = 3
+    elif piece == 3:
+        opp_piece = 2
+    score = 0
+    for i in range(3, 12):
+        if i == 3 or i == 11:
+            for j in range(3, 8):
+                if board[i][j] == piece or board[i][j] == 10*piece:
+                    piececount += 1
+                    score += 100 * get_center_value(i, j)
+                if board [i][j] == opp_piece:
+                    opp_piececount += 1
+                    score -= 100 * get_center_value(i, j)
+        if i == 4 or i == 10:
+            for j in range(2, 8):
+                if board[i][j] == piece or board[i][j] == 10*piece:
+                    piececount += 1
+                    score += 100 * get_center_value(i, j)
+                if board [i][j] == opp_piece:
+                    opp_piececount += 1
+                    score -= 100 * get_center_value(i, j)
+        if i == 5 or i == 9:
+            for j in range(2, 9):
+                if board[i][j] == piece or board[i][j] == 10*piece:
+                    piececount += 1
+                    score += 100 * get_center_value(i, j)
+                if board [i][j] == opp_piece:
+                    opp_piececount += 1
+                    score -= 100 * get_center_value(i, j)
+        if i == 6 or i == 8:
+            for j in range(1, 9):
+                if board[i][j] == piece or board[i][j] == 10*piece:
+                    piececount += 1
+                    score += 100 * get_center_value(i, j)
+                if board [i][j] == opp_piece:
+                    opp_piececount += 1
+                    score -= 100 * get_center_value(i, j)
+        if i == 7:
+            for j in range(1, 10):
+                if board[i][j] == piece or board[i][j] == 10*piece:
+                    piececount += 1
+                    score += 100 * get_center_value(i, j)
+                if board [i][j] == opp_piece:
+                    opp_piececount += 1
+                    score -= 100 * get_center_value(i, j)
+    score = score - (14 - piececount)*1000
+    score = score + (14 - opp_piececount)*900
+    return score
+def Minimax(board, depth, alpha, beta, piece, maximising, move = -1):
+    if piece == 2:
+        opp_piece = 3
+    elif piece == 3:
+        opp_piece = 2
+    is_terminal = AI.is_terminal_node(board)
+    if depth == 0 or AI.is_terminal_node(board):
+        if is_terminal:
+            if AI.winning_move(board, piece):
+                return None, 9999999999
+            elif AI.winning_move(board, opp_piece):
+                return None, -9999999999
+        else:
+         #   return None, evaluate_posRandom(board, piece)
+            return None, evaluate_pos1(board, piece)
+    if maximising:
+        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, piece, opp_piece)
+        if move != -1:
+            if move in valid_moves:
+                valid_moves.remove(move)
+        value = -math.inf
+        move = random.choice(valid_moves)
+        for move in valid_moves:
+     #       b_copy = board.copy()
+      #      b_copy, knock_off, row, col = AI.play_move(b_copy, move, piece, opp_piece)
+       #     new_score = Minimax(b_copy, depth - 1, alpha, beta, piece, False)[1]
+
+            board, knock_off, row, col = AI.play_move(board, move, piece, opp_piece)
+            new_score = Minimax(board, depth - 1, alpha, beta, piece, False)[1]
+            board = AI.undo_move(board, move, piece, opp_piece)
+            if new_score > value:
+                value = new_score
+                best_move = move
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+        return best_move, value
+
+    else:
+        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, opp_piece, piece)
+        value = math.inf
+        move = random.choice(valid_moves)
+        for move in valid_moves:
+    #        b_copy = board.copy()
+     #       b_copy, knock_off, row, col = AI.play_move(b_copy, move, opp_piece, piece)
+      #      new_score = Minimax(b_copy, depth - 1,alpha, beta, piece, True)[1]
+
+            board, knock_off, row, col = AI.play_move(board, move, opp_piece, piece)
+            new_score = Minimax(board, depth - 1, alpha, beta, piece, True)[1]
+            board = AI.undo_move(board, move, opp_piece, piece)
+            if new_score < value:
+                value = new_score
+                best_move = move
+            beta = min(beta, value)
+            if alpha >= beta:
+                break
+        return best_move, value
+
+
+
+def countX(lst, x):
+    count = 0
+    for ele in lst:
+        if (ele == x):
+            count = count + 1
+    return count
+
+def find_indexes(lst, elem):
+    indexes = []
+    for i in range(len(lst)):
+        if lst[i] == elem:
+            indexes.append(i)
+    return indexes
+
+def find_duplicates(lst):
+    duplicates = []
+    for item in lst:
+        if lst.count(item) > 1 and item not in duplicates:
+            duplicates.append(item)
+    return duplicates
+
+def Minimax3(board, depth, alpha, beta, piece, maximising, zobrist_table, move = -1):
+    if piece == 2:
+        opp_piece = 3
+    elif piece == 3:
+        opp_piece = 2
+    is_terminal = AI.is_terminal_node(board)
+    if depth == 0 or AI.is_terminal_node(board):
+        if is_terminal:
+            if AI.winning_move(board, piece):
+                return None, 9999999999
+            elif AI.winning_move(board, opp_piece):
+                return None, -9999999999
+        else:
+            pos_score = evaluate_pos1(board, piece)
+            key = AI.generate_zobrist_key(board)
+            zobrist_table[key] = None, pos_score
+        #    return None, evaluate_posRandom(board, piece)
+            return None, pos_score
+    if maximising:
+        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, piece, opp_piece)
+        if move != -1:
+            if move in valid_moves:
+                valid_moves.remove(move)
+        value = -math.inf
+        for move in valid_moves:
+     #       b_copy = board.copy()
+      #      b_copy, knock_off, row, col = AI.play_move(b_copy, move, piece, opp_piece)
+       #     new_score = Minimax3(b_copy, depth - 1, alpha, beta, piece, False)[1]
+
+            board, knock_off, row, col = AI.play_move(board, move, piece, opp_piece)
+        # Look up the Zobrist key for the board state
+            board_key = AI.generate_zobrist_key(board)
+            if board_key in zobrist_table:
+                new_score = zobrist_table[board_key][1]
+            new_score = Minimax3(board, depth - 1, alpha, beta, piece, False, zobrist_table)[1]
+            board = AI.undo_move(board, move, piece, opp_piece)
+            if new_score > value:
+                value = new_score
+                best_move = move
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+        return best_move, value
+
+    else:
+        valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, opp_piece, piece)
+        value = math.inf
+        for move in valid_moves:
+    #        b_copy = board.copy()
+    #        b_copy, knock_off, row, col = AI.play_move(b_copy, move, opp_piece, piece)
+     #       new_score = Minimax3(b_copy, depth - 1,alpha, beta, piece, True)[1]
+
+            board, knock_off, row, col = AI.play_move(board, move, opp_piece, piece)
+             # Look up the Zobrist key for the board state
+            board_key = AI.generate_zobrist_key(board)
+            if board_key in zobrist_table:
+                new_score = zobrist_table[board_key][1]
+            else:
+                new_score = Minimax3(board, depth - 1, alpha, beta, piece, True, zobrist_table)[1]
+            board = AI.undo_move(board, move, opp_piece, piece)
+            if new_score < value:
+                value = new_score
+                best_move = move
+            beta = min(beta, value)
+            if alpha >= beta:
+                break
+        return best_move, value
+
 level_times = []
 level_times = move_pieces.get_level_times(level_times)
 player_timer = 99999999999999999999
@@ -667,11 +935,14 @@ timer_backup = 9999999999
 while game_running:
     while AIvsAI:
         if turn == 0:
-            valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, 2, 3)
+        #    valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, 2, 3)
             start1 = time.time()
-            move, minimax_score = AI.Minimax3(board, 3, -math.inf, math.inf, 2, True, {})
+            evalnum = 0
+            move, minimax_score = Minimax3(board, 3, -math.inf, math.inf, 2, True, {})
+
          #   move, minimax_score = AI.iterative_deepener(5, board, -math.inf, math.inf, 2)
-            print("black")
+            print("black:")
+            print("number of evals: " + str(evalnum))
             end1 = time.time()
             print(end1 - start1)
             print(minimax_score)
@@ -679,7 +950,7 @@ while game_running:
             last2 = movelist1[-3:]
             if len(last2) == 3:
                 if last2[0] == last2[2]:
-                    move, minimax_score = AI.Minimax2(board, 3, -math.inf, math.inf, 2, True, move)
+                    move, minimax_score = Minimax(board, 3, -math.inf, math.inf, 2, True, move)
             board, knock_off, row, col = AI.play_move(board, move, 2, 3, knock_off)
             knocked_piece = 3
             if knock_off:
@@ -699,10 +970,12 @@ while game_running:
             pygame.display.update()
 
         if turn == 1:
-            valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, 3, 2)
+   #         valid_moves, valid_shoves, valid_knocks = AI.get_all_moves(board, 3, 2)
             start2 = time.time()
-            move, minimax_score = AI.Minimax(board, 3, -math.inf, math.inf, 3, True)
+            evalnum = 0
+            move, minimax_score = Minimax3(board, 3, -math.inf, math.inf, 3, True, {})
             print("white:")
+            print("number of evals: " + str(evalnum))
             print(minimax_score)
             end2 = time.time()
             print(end2 - start2)
