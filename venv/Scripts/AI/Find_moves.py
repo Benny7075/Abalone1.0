@@ -7,6 +7,11 @@ import copy
 board = move_pieces.board
 starting_board = copy.deepcopy(board)
 
+railing = {(2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (3, 2), (3, 8), (4, 1), (4, 8),
+           (5, 1), (5, 9), (6, 0), (6, 9), (7, 0), (7, 10), (8, 0), (8, 9), (9,1), (9, 9),
+           (10, 1), (10, 8), (11, 2), (11, 8), (12, 2), (12, 3), (12, 4), (12, 5), (12, 6), (12, 7)}
+
+
 def knocked_off(board, row, col, piece):
     board[row][col] = 100*piece
     posx, posy = move_pieces.get_screen_pos(row, col)
@@ -26,11 +31,15 @@ def knocked_off(board, row, col, piece):
                 move_pieces.see_us_home(screen, get_screen_pos(12, 2), get_screen_pos(14, j), 3)
                 break
 
-def legal_sing_moves(board, piece, position, legal_moves):
-    for row in range(position[0] - 2, position[0] + 2):
-        for col in range(position[1] - 2, position[1] + 2):
-            if board[row][col] == 1 and move_pieces.selectable2(row, col, [(position[0], position[1])]):
-                legal_moves.append(((position[0], position[1]), (row, col)))
+def legal_sing_moves(positions, marble, legal_moves):
+    if marble[0] == 2:
+        opp_piece = 3
+    elif marble[0] == 3:
+        opp_piece = 2
+    for row in range(marble[1] - 2, marble[1] + 2):
+        for col in range(marble[2] - 2, marble[2] + 2):
+            if (marble[0], row, col) not in positions and (opp_piece, row, col) not in positions and (row, col) not in railing and move_pieces.selectable2(row, col, [(marble[1], marble[2])]):
+                legal_moves.append(((marble[1], marble[2]), (row, col)))
 
 
 def selectable2_edited(row, col, highlighted):
@@ -88,16 +97,16 @@ def selectable3_edited(row, col, highlighted):
     return False
 
 # edited to return boolean
-def show_if_poss(board, row1, col1, row2, col2, row3, col3):
+def show_if_poss(emptys, row1, col1, row2, col2, row3, col3):
     slides = []
-    if board[row1][col1] == 1 and board[row2][col2] == 1:
+    if (row1, col1) in emptys and (row2, col2) in emptys:
         slides.append(((row1, col1), (row2, col2)))
-    if board[row3][col3] == 1 and board[row2][col2] == 1:
+    if (row3, col3) in emptys and (row2, col2) in emptys:
         slides.append(((row2, col2), (row3, col3)))
     return slides
 
 
-def show_slides2(board, highlighted):
+def show_slides2(positions, emptys, highlighted):
     r1, c1 = highlighted[0]
     r2, c2 = highlighted[1]
     res = [1,7]
@@ -112,76 +121,102 @@ def show_slides2(board, highlighted):
             # facing left
             if c1 == c2:
                 # left side
-                blues = show_if_poss(board,highest_row, c1 - 1, lowest_row, c1 - 1, lowest_row + 1, c1)
+                blues = show_if_poss(emptys ,highest_row, c1 - 1, lowest_row, c1 - 1, lowest_row + 1, c1)
                 for slide in blues:
                     possible_slides.append(slide)
                 # right side
-                blues = show_if_poss(board, highest_row - 1, c1, highest_row, c1 + 1, lowest_row, c1 + 1)
+                blues = show_if_poss(emptys , highest_row - 1, c1, highest_row, c1 + 1, lowest_row, c1 + 1)
                 for slide in blues:
                     possible_slides.append(slide)
             # facing right
             if c1 != c2:
                 # left side
-                blues = show_if_poss(board, lowest_row, lowest_col - 1, highest_row, lowest_col, highest_row - 1, lowest_col)
+                blues = show_if_poss(emptys , lowest_row, lowest_col - 1, highest_row, lowest_col, highest_row - 1, lowest_col)
                 for slide in blues:
                     possible_slides.append(slide)
                 # right side
-                blues = show_if_poss(board, lowest_row + 1, highest_col, lowest_row, highest_col, highest_row, highest_col + 1)
+                blues = show_if_poss(emptys , lowest_row + 1, highest_col, lowest_row, highest_col, highest_row, highest_col + 1)
                 for slide in blues:
                     possible_slides.append(slide)
         else:
             # facing right
             if c1 == c2:
                 # left side
-                blues = show_if_poss(board, lowest_row, c1 - 1, highest_row, c1 - 1, highest_row - 1, c1)
+                blues = show_if_poss(emptys , lowest_row, c1 - 1, highest_row, c1 - 1, highest_row - 1, c1)
                 for slide in blues:
                     possible_slides.append(slide)
                 # right side
-                blues = show_if_poss(board, highest_row, c1 + 1, lowest_row, c1 + 1, lowest_row + 1, c1)
+                blues = show_if_poss(emptys , highest_row, c1 + 1, lowest_row, c1 + 1, lowest_row + 1, c1)
                 for slide in blues:
                     possible_slides.append(slide)
             # facing left
             if c1 != c2:
                 # left side
-                blues = show_if_poss(board, lowest_row + 1, lowest_col, lowest_row, lowest_col, highest_row, lowest_col - 1)
+                blues = show_if_poss(emptys , lowest_row + 1, lowest_col, lowest_row, lowest_col, highest_row, lowest_col - 1)
                 for slide in blues:
                     possible_slides.append(slide)
                 # right side
-                blues = show_if_poss(board, lowest_row, highest_col + 1, highest_row, highest_col, highest_row - 1, highest_col)
+                blues = show_if_poss(emptys , lowest_row, highest_col + 1, highest_row, highest_col, highest_row - 1, highest_col)
                 for slide in blues:
                     possible_slides.append(slide)
     # flat
     if r1 == r2:
         if move_pieces.slanted_row(r1):
             # top
-            blues = show_if_poss(board, r1 - 1, highest_col + 1, r1 - 1, highest_col, r1 - 1, lowest_col)
+            blues = show_if_poss(emptys , r1 - 1, highest_col + 1, r1 - 1, highest_col, r1 - 1, lowest_col)
             for slide in blues:
                 possible_slides.append(slide)
             # bottom
-            blues = show_if_poss(board, r1 + 1, highest_col + 1, r1 + 1, highest_col, r1 + 1, lowest_col)
+            blues = show_if_poss(emptys , r1 + 1, highest_col + 1, r1 + 1, highest_col, r1 + 1, lowest_col)
             for slide in blues:
                 possible_slides.append(slide)
         else:
             # top
-            blues = show_if_poss(board, r1 - 1, highest_col, r1 - 1, lowest_col, r1 - 1, lowest_col - 1)
+            blues = show_if_poss(emptys , r1 - 1, highest_col, r1 - 1, lowest_col, r1 - 1, lowest_col - 1)
             for slide in blues:
                 possible_slides.append(slide)
             # bottom
-            blues = show_if_poss(board, r1 + 1, highest_col, r1 + 1, lowest_col, r1 + 1, lowest_col - 1)
+            blues = show_if_poss(emptys , r1 + 1, highest_col, r1 + 1, lowest_col, r1 + 1, lowest_col - 1)
             for slide in blues:
                 possible_slides.append(slide)
     return possible_slides
 
-def not_possible(board, row1, col1, row2, col2, row3, col3, row4, col4):
+def get_empty_spots(positions):
+    emptys = []
+    for i in range(3, 12):
+        if i == 3 or i == 11:
+            for j in range(3, 8):
+                if (2, i, j) not in positions and (3, i, j) not in positions:
+                    emptys.append((i, j))
+        if i == 4 or i == 10:
+            for j in range(2, 8):
+                if (2, i, j) not in positions and (3, i, j) not in positions:
+                    emptys.append((i, j))
+        if i == 5 or i == 9:
+            for j in range(2, 9):
+                if (2, i, j) not in positions and (3, i, j) not in positions:
+                    emptys.append((i, j))
+        if i == 6 or i == 8:
+            for j in range(1, 9):
+                if (2, i, j) not in positions and (3, i, j) not in positions:
+                    emptys.append((i, j))
+        if i == 7:
+            for j in range(1, 10):
+                if (2, i, j) not in positions and (3, i, j) not in positions:
+                    emptys.append((i, j))
+    return emptys
+
+
+def not_possible(positions, emptys, row1, col1, row2, col2, row3, col3, row4, col4):
     slides3 = []
-    if board[row1][col1] == 1 and board[row2][col2] == 1 and board[row3][col3] == 1:
+    if (row1, col1) in emptys and (row2, col2) in emptys and (row3, col3) in emptys:
         slides3.append(((row1, col1), (row2, col2), (row3, col3)))
-    if board[row4][col4] == 1 and board[row2][col2] == 1 and board[row3][col3] == 1:
+    if (row4, col4) in emptys and (row2, col2) in emptys and (row3, col3) in emptys:
         slides3.append(((row2, col2), (row3, col3), (row4, col4)))
     return slides3
 
 
-def show_slides3(board, highlighted):
+def show_slides3(positions, emptys, highlighted):
     r1, c1 = highlighted[0]
     r2, c2 = highlighted[1]
     r3, c3 = highlighted[2]
@@ -201,20 +236,20 @@ def show_slides3(board, highlighted):
     if rmax == rmin:
         if move_pieces.slanted_row(r1):
             # top
-            slides3 = not_possible(board, r1 - 1, cmin, r1 - 1, cmax - 1, r1 - 1, cmax, r1 - 1, cmax + 1)
+            slides3 = not_possible(positions, emptys, r1 - 1, cmin, r1 - 1, cmax - 1, r1 - 1, cmax, r1 - 1, cmax + 1)
             for slide in slides3:
                 possible_slides3.append(slide)
             # bottom
-            slides3 = not_possible(board, r1 + 1, cmin, r1 + 1, cmax - 1, r1 + 1, cmax, r1 + 1, cmax + 1)
+            slides3 = not_possible(positions, emptys, r1 + 1, cmin, r1 + 1, cmax - 1, r1 + 1, cmax, r1 + 1, cmax + 1)
             for slide in slides3:
                 possible_slides3.append(slide)
         else:
             # top
-            slides3 = not_possible(board, r1 - 1, cmin - 1, r1 - 1, cmin, r1 - 1, cmax - 1, r1 - 1, cmax)
+            slides3 = not_possible(positions, emptys, r1 - 1, cmin - 1, r1 - 1, cmin, r1 - 1, cmax - 1, r1 - 1, cmax)
             for slide in slides3:
                 possible_slides3.append(slide)
             # bottom
-            slides3 = not_possible(board, r1 + 1, cmin - 1, r1 + 1, cmin, r1 + 1, cmax - 1, r1 + 1, cmax)
+            slides3 = not_possible(positions, emptys, r1 + 1, cmin - 1, r1 + 1, cmin, r1 + 1, cmax - 1, r1 + 1, cmax)
             for slide in slides3:
                 possible_slides3.append(slide)
     else:
@@ -227,55 +262,54 @@ def show_slides3(board, highlighted):
             # facing left
             if moving_piece_cols[index_max] == moving_piece_cols[index_mid]:
                 # left side
-                slides3 = not_possible(board, rmin, cmin - 1, rmax - 1, cmin, rmax, cmin, rmax + 1, cmax)
+                slides3 = not_possible(positions, emptys, rmin, cmin - 1, rmax - 1, cmin, rmax, cmin, rmax + 1, cmax)
                 for slide in slides3:
                     possible_slides3.append(slide)
                 # right side
-                slides3 = not_possible(board, rmax, cmax + 1, rmax - 1, cmax + 1, rmin, cmax, rmin - 1, cmax)
+                slides3 = not_possible(positions, emptys, rmax, cmax + 1, rmax - 1, cmax + 1, rmin, cmax, rmin - 1, cmax)
                 for slide in slides3:
                     possible_slides3.append(slide)
             # facing right
             else:
                 # left side
-                slides3 = not_possible(board, rmax, cmin - 1, rmin + 1, cmin, rmin, cmin, rmin - 1, cmax)
+                slides3 = not_possible(positions, emptys, rmax, cmin - 1, rmin + 1, cmin, rmin, cmin, rmin - 1, cmax)
                 for slide in slides3:
                     possible_slides3.append(slide)
                 # right side
-                slides3 = not_possible(board, rmax + 1, cmax, rmax, cmax, rmin + 1, cmax + 1, rmin, cmax + 1)
+                slides3 = not_possible(positions, emptys, rmax + 1, cmax, rmax, cmax, rmin + 1, cmax + 1, rmin, cmax + 1)
                 for slide in slides3:
                     possible_slides3.append(slide)
         else:
             # facing right
             if moving_piece_cols[index_max] == moving_piece_cols[index_mid]:
                 # left side
-                slides3 = not_possible(board, rmin - 1, cmin, rmin, cmin, rmax - 1, cmin - 1, rmax, cmin - 1)
+                slides3 = not_possible(positions, emptys, rmin - 1, cmin, rmin, cmin, rmax - 1, cmin - 1, rmax, cmin - 1)
                 for slide in slides3:
                     possible_slides3.append(slide)
                 # right side
-                slides3 = not_possible(board, rmin, cmax + 1, rmax - 1, cmax, rmax, cmax, rmax + 1, cmin)
+                slides3 = not_possible(positions, emptys, rmin, cmax + 1, rmax - 1, cmax, rmax, cmax, rmax + 1, cmin)
                 for slide in slides3:
                     possible_slides3.append(slide)
             # facing left
             else:
                 # left side
-                slides3 = not_possible(board, rmin, cmin - 1, rmax - 1, cmin - 1, rmax, cmin, rmax + 1, cmin)
+                slides3 = not_possible(positions, emptys, rmin, cmin - 1, rmax - 1, cmin - 1, rmax, cmin, rmax + 1, cmin)
                 for slide in slides3:
                     possible_slides3.append(slide)
                 # right side
-                slides3 = not_possible(board, rmax, cmax + 1, rmin + 1, cmax, rmin, cmax, rmin - 1, cmin)
+                slides3 = not_possible(positions, emptys, rmax, cmax + 1, rmin + 1, cmax, rmin, cmax, rmin - 1, cmin)
                 for slide in slides3:
                     possible_slides3.append(slide)
     return possible_slides3
 
-def find_all_pairs(board, piece):
+def find_all_pairs(positions, piece):
     possible_pairs = []
-    for i in range(3, 12):
-        for j in range(1, 10):
-            if board[i][j] == piece:
-                for row in range(i - 2, i + 2):
-                    for col in range(j - 2, j + 2):
-                        if board[row][col] == piece and selectable2_edited(row, col, [(i, j)]):
-                            possible_pairs.append([(i, j), (row, col)])
+    for marble in positions:
+        if marble[0] == piece:
+            for marble2 in positions:
+                if marble[0] == piece and selectable2_edited(marble2[1], marble2[2], [(marble[1], marble[2])]):
+                    possible_pairs.append([(marble[1], marble[2]), (marble2[1], marble2[2])])
+
     return possible_pairs
 
 
@@ -286,20 +320,20 @@ def order_three(three):
     return tuple(sorted_coords[2::-1] if sorted_coords[0][0] != sorted_coords[2][0] else sorted_coords)
 
 
-def find_all_threes(board, piece, pairs):
+def find_all_threes(positions, piece, pairs):
     possible_threes = []
-    for i in range(3, 12):
-        for j in range(1, 10):
-            for pair in pairs:
-                if board[i][j] == piece and selectable3_edited(i, j, pair):
-                    # return three from bottom up to be compatible
-                    if (i, j) not in pair:
-                        three = [pair[0], pair[1], (i, j)]
-                        three = order_three(three)
-                        possible_threes.append(three)
+    for marble in positions:
+        for pair in pairs:
+            if marble[0] == piece and selectable3_edited(marble[1], marble[2], pair):
+                if (marble[1], marble[2]) not in pair:
+                    three = [pair[0], pair[1], (marble[1], marble[2])]
+                    three = order_three(three)
+                    possible_threes.append(three)
+
     return possible_threes
 
-def append_3push_moves(board, threes, row, col, legal_moves, legal_shoves, legal_knocks, opp_piece):
+def append_3push_moves(positions, threes, row, col, legal_moves, legal_shoves, legal_knocks, opp_piece):
+    global railing
     for three in threes:
         first_pair = []
         second_pair = []
@@ -324,12 +358,13 @@ def append_3push_moves(board, threes, row, col, legal_moves, legal_shoves, legal
                     first_pair.append(marble)
                 if marble[0] != rmax:
                     second_pair.append(marble)
-        if board[row][col] == 1 and move_pieces.selectable3(row, col, first_pair):
-            legal_moves.append((three[2], (row, col)))
-        if board[row][col] == 1 and move_pieces.selectable3(row, col, second_pair):
-            legal_moves.append((three[0], (row, col)))
+        if (row, col) not in railing and (2, row, col) not in positions and (3, row, col) not in positions:
+            if move_pieces.selectable3(row, col, first_pair):
+                legal_moves.append((three[2], (row, col)))
+            elif move_pieces.selectable3(row, col, second_pair):
+                legal_moves.append((three[0], (row, col)))
 
-        if board[row][col] == opp_piece and move_pieces.selectable3(row, col, first_pair):
+        if (opp_piece, row, col) in positions and move_pieces.selectable3(row, col, first_pair):
             if abs(first_pair[0][0] - row) + abs(first_pair[0][1] - col) > abs(first_pair[1][0] - row) + abs(first_pair[1][1] - col):
                 closest_marb = first_pair[1]
             else:
@@ -339,23 +374,23 @@ def append_3push_moves(board, threes, row, col, legal_moves, legal_shoves, legal
                     furthest_marb = marble
             for r in range(row - 2, row + 2):
                 for c in range(col - 2, col + 2):
-                    if board[r][c] == 1 or board[r][c] == 9:
+                    if (2, r, c) not in positions and (3, r, c) not in positions:
                         if move_pieces.selectable3(r, c, (closest_marb, (row, col))):
                             legal_moves.append((furthest_marb, (row, col), (r, c)))
                             legal_shoves.append((furthest_marb, (row, col), (r, c)))
-                            if board[r][c] == 9:
+                            if (r, c) in railing:
                                 legal_knocks.append((furthest_marb, (row,col), (r, c)))
 
-                    elif board[r][c] == opp_piece and move_pieces.selectable3(r, c, (closest_marb, (row, col))) and not (r == row and c == col):
+                    elif (opp_piece, r, c) in positions and move_pieces.selectable3(r, c, (closest_marb, (row, col))) and not (r == row and c == col):
                         for roww in range(r - 2, r + 2):
                             for coll in range(c - 2, c + 2):
                                 if coll < 11:
-                                    if board[roww][coll] == 1 or board[roww][coll] == 9 or board[roww][coll] == 0:
+                                    if (2, roww, coll) not in positions and (3, roww, coll) not in positions:
                                         if move_pieces.selectable3(roww, coll, ((row, col), (r, c))):
                                             legal_moves.append((furthest_marb, (row, col), (roww, coll)))
                                             legal_shoves.append((furthest_marb, (row, col), (roww, coll)))
 
-        elif board[row][col] == opp_piece and move_pieces.selectable3(row, col, second_pair):
+        elif (opp_piece, row, col) in positions and move_pieces.selectable3(row, col, second_pair):
             if abs(second_pair[0][0] - row) + abs(second_pair[0][1] - col) > abs(second_pair[1][0] - row) + abs(second_pair[1][1] - col):
                 closest_marb = second_pair[1]
             else:
@@ -365,21 +400,21 @@ def append_3push_moves(board, threes, row, col, legal_moves, legal_shoves, legal
                     furthest_marb = marble
             for r in range(row - 2, row + 2):
                 for c in range(col - 2, col + 2):
-                    if board[r][c] == 1 or board[r][c] == 9:
+                    if (2, r, c) not in positions and (3, r, c) not in positions:
                         if move_pieces.selectable3(r, c, (closest_marb, (row, col))):
                             legal_moves.append((furthest_marb, (row, col), (r, c)))
                             legal_shoves.append((furthest_marb, (row, col), (r, c)))
-                            if board[r][c] == 9:
+                            if (r, c) in railing:
                                 legal_knocks.append((furthest_marb, (row,col), (r, c)))
 
-                    elif board[r][c] == opp_piece and move_pieces.selectable3(r, c, (closest_marb, (row, col))) and not (r == row and c == col):
+                    elif (opp_piece, r, c) in positions and move_pieces.selectable3(r, c, (closest_marb, (row, col))) and not (r == row and c == col):
                         for roww in range(r - 2, r + 2):
                             for coll in range(c - 2, c + 2):
-                                if board[roww][coll] == 1 or board[roww][coll] == 9:
+                                if (2, roww, coll) not in positions and (3, roww, coll) not in positions:
                                     if move_pieces.selectable3(roww, coll, ((row, col), (r, c))):
                                         legal_moves.append((furthest_marb, (row, col), (roww, coll)))
                                         legal_shoves.append((furthest_marb, (row, col), (roww, coll)))
-                                        if board[r][c] == 9:
+                                        if (r, c) in railing:
                                             legal_knocks.append((furthest_marb, (row, col), (roww, coll)))
 
 def find_duplicates(lst):
@@ -390,26 +425,28 @@ def find_duplicates(lst):
     return duplicates
 
 legal_moves = []
-def get_all_moves(board, piece, opp_piece):
+def get_all_moves(positions, piece, opp_piece):
+    global railing
+    emptys = get_empty_spots(positions)
     legal_moves = []
     legal_shoves = []
     legal_knocks = []
-    pairs = find_all_pairs(board, piece)
-    threes = find_all_threes(board, piece, pairs)
+    pairs = find_all_pairs(positions, piece)
+    threes = find_all_threes(positions, piece, pairs)
     for r in range(3, 12):
         for c in range(1, 10):
             # append all 3pushes
-            append_3push_moves(board, threes, r, c, legal_moves, legal_shoves, legal_knocks, opp_piece)
+            append_3push_moves(positions, threes, r, c, legal_moves, legal_shoves, legal_knocks, opp_piece)
 
                 # append all 2 pushes
             for pair in pairs:
-                if board[r][c] == 1 and move_pieces.selectable3(r, c, pair):
+                if (r, c) not in railing and (piece, r, c) not in positions and (opp_piece, r, c) not in positions and move_pieces.selectable3(r, c, pair):
                     if abs(pair[0][0] - r) + abs(pair[0][1] - c) < abs(pair[1][0] - r) + abs(pair[1][1] - c):
                         legal_moves.append((pair[1], (r, c)))
                     else:
                         legal_moves.append((pair[0], (r, c)))
         # shove move recorded as (spot thats moved out of, spot where colour changed, spot pushed piece lands)
-                elif board[r][c] == opp_piece and move_pieces.selectable3(r, c, pair):
+                elif (opp_piece, r, c) in positions and move_pieces.selectable3(r, c, pair):
                     if abs(pair[0][0] - r) + abs(pair[0][1] - c) < abs(pair[1][0] - r) + abs(pair[1][1] - c):
                         furthest_marb = pair[1]
                     else:
@@ -419,23 +456,24 @@ def get_all_moves(board, piece, opp_piece):
                             closest_marble = marble
                     for row in range(r - 2, r + 2):
                         for col in range(c - 2, c + 2):
-                            if board[row][col] == 1 or board[row][col] == 9:
+                            if (piece, row, col) not in positions and (opp_piece, row, col) not in positions:
                                 if move_pieces.selectable3(row, col, (closest_marble, (r, c))):
                                     legal_moves.append((furthest_marb, (r,c), (row, col)))
                                     legal_shoves.append((furthest_marb, (r,c), (row, col)))
-                                    if board[row][col] == 9:
+                                    if (row, col) in railing:
                                         legal_knocks.append((furthest_marb, (r,c), (row, col)))
 
-            # append all single moves
-            if board[r][c] == piece:
-                legal_sing_moves(board, piece, (r, c), legal_moves)
+    # append all single moves
+    for marble in positions:
+        if marble[0] == piece:
+           legal_sing_moves(positions, marble, legal_moves)
 
     for three in threes:
-        slide_deses = show_slides3(board, three)
+        slide_deses = show_slides3(positions, emptys, three)
         for slide in slide_deses:
             legal_moves.append((three, slide))
     for pair in pairs:
-        slide_ends = show_slides2(board, pair)
+        slide_ends = show_slides2(positions, emptys, pair)
         for slide in slide_ends:
             legal_moves.append((pair, slide))
 
@@ -472,6 +510,65 @@ def get_all_shoves(board, piece, opp_piece):
                                     if board[row][col] == 9:
                                         legal_knocks.append((furthest_marb, (r, c), (row, col)))
     return legal_shoves
+
+def play_move_position(positions, move, piece, opp_piece):
+    global railing
+    new_positions = []
+    if len(move) == 2:
+        if isinstance(move[0][0], int):
+            for marble in positions:
+                if marble[1] == move[0][0] and marble[2] == move[0][1]:
+                    new_positions.append((piece, move[1][0], move[1][1]))
+                else:
+                    new_positions.append(marble)
+
+        else:
+            for marble in positions:
+                if (marble[1], marble[2]) not in move[0]:
+                    new_positions.append(marble)
+            for des in move[1]:
+                new_positions.append((piece, des[0], des[1]))
+    if len(move) == 3:
+        for marble in positions:
+            if (marble[1], marble[2]) == move[0]:
+                pass
+            elif (marble[1], marble[2]) == move[1]:
+                new_positions.append((piece, marble[1], marble[2]))
+            else:
+                new_positions.append(marble)
+        if (move[2][0], move[2][1]) not in railing:
+            new_positions.append((opp_piece, move[2][0], move[2][1]))
+    return new_positions
+
+
+def undo_move_position(positions, move, piece, opp_piece):
+    global railing
+    new_positions = []
+    if len(move) == 2:
+        if isinstance(move[0][0], int):
+            for marble in positions:
+                if (marble[1], marble[2]) == move[1]:
+                    new_positions.append((piece, move[0][0], move[0][1]))
+                else:
+                    new_positions.append(marble)
+        else:
+            for marble in positions:
+                if (marble[1], marble[2]) not in move[1]:
+                    new_positions.append(marble)
+            for des in move[0]:
+                new_positions.append((piece, des[0], des[1]))
+    if len(move) == 3:
+        for marble in positions:
+            if (marble[1], marble[2]) == move[2]:
+                pass
+            elif (marble[1], marble[2]) == move[1]:
+                new_positions.append((opp_piece, marble[1], marble[2]))
+            else:
+                new_positions.append(marble)
+        new_positions.append((piece, move[0][0], move[0][1]))
+    return new_positions
+
+
 
 
 def play_move(board, move, piece, opp_piece, knock_off = False):

@@ -142,49 +142,35 @@ def evaluate_pos1(board, piece):
     score = score + (14 - opp_piececount)*900
     return score
 
-def ball_on_rail(board, piece):
-    for j in range(2, 8):
-        if board[2][j] == piece:
-            return True
-        if board[12][j] == piece:
-            return True
-    if board[3][2] == piece or board[3][8] == piece:
-        return True
-    if board[4][1] == piece or board[4][8] == piece:
-        return True
-    if board[5][1] == piece or board[5][9] == piece:
-        return True
-    if board[6][0] == piece or board[6][9] == piece:
-        return True
-    if board[7][0] == piece or board[7][10] == piece:
-        return True
-    if board[8][0] == piece or board[8][9] == piece:
-        return True
-    if board[9][1] == piece or board[9][9] == piece:
-        return True
-    if board[10][1] == piece or board[10][8] == piece:
-        return True
-    if board[11][2] == piece or board[11][8] == piece:
-        return True
+railing = {(2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (3, 2), (3, 8), (4, 1), (4, 8),
+           (5, 1), (5, 9), (6, 0), (6, 9), (7, 0), (7, 10), (8, 0), (8, 9), (9,1), (9, 9),
+           (10, 1), (10, 8), (11, 2), (11, 8), (12, 2), (12, 3), (12, 4), (12, 5), (12, 6), (12, 7)}
 
+
+def ball_on_rail(positions, piece):
+    global railing
+    for marble in positions:
+        if marble[0] == piece:
+            if (marble[1], marble[2]) in railing:
+                return True
     return False
 
 
 
-def winning_move(board, piece):
+def winning_move(positions, piece):
     if piece == 2:
         opp_piece = 3
     elif piece == 3:
         opp_piece = 2
     if piece == 2:
-        if board[14][3] != 50 and ball_on_rail(board, opp_piece):
+        if board[14][3] != 50 and ball_on_rail(positions, opp_piece):
             return True
     elif piece == 3:
-        if board[0][6] != 60 and ball_on_rail(board, opp_piece):
+        if board[0][6] != 60 and ball_on_rail(positions, opp_piece):
             return True
 
-def is_terminal_node(board):
-    return winning_move(board, 2) or winning_move(board, 3)
+def is_terminal_node(positions):
+    return winning_move(positions, 2) or winning_move(positions, 3)
 
 
 def iterative_deepener(timelimit, board, alpha, beta, piece):
@@ -287,20 +273,12 @@ for i in range(ROW_COUNT):
     for j in range(COLUMN_COUNT):
         zobrist_keys[i][j] = [random.randint(0, 2**64-1), random.randint(0, 2**64-1), random.randint(0, 2**64-1), random.randint(0, 2**64-1)]
 
-def generate_zobrist_key(board):
+def generate_zobrist_key(positions):
     """
     Generates a Zobrist key for the given board state.
     """
     key = 0
-    for i in range(ROW_COUNT):
-        for j in range(COLUMN_COUNT):
-            piece = board[i][j]
-            if piece == 2 or piece == 3:
-                piece_index = int(piece - 2)
-                key ^= zobrist_keys[i][j][piece_index]
-            if piece == 200:
-                key ^= zobrist_keys[i][j][2]
-            if piece == 300:
-                key ^= zobrist_keys[i][j][3]
-
+    for marble in positions:
+        piece_index = marble[0] - 2
+        key ^= zobrist_keys[marble[1]][marble[2]][piece_index]
     return key
