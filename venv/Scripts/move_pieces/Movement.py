@@ -627,7 +627,7 @@ def is_it_shove2(move):
 def get_highlighted_from_AI(move):
     if len(move) == 2 and not isinstance(move[0][0], int):
         return move[0]
-#lol
+
 
 def calculate_health(time_to_zero, start_time):
     # Set up the health bar
