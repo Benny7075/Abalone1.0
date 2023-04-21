@@ -29,7 +29,7 @@ def get_AIlevel(depthlist):
     for i in range(61):
         depthlist.append(1)
     depthlist[1] = 4
-    depthlist[3] = 3
+    depthlist[3] = 4
     return depthlist
 
 def create_boardLevels():

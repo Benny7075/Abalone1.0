@@ -476,6 +476,42 @@ def beat_level(screen, board, opplives, playerlives):
     pygame.display.update()
     pygame.time.delay(2000)
 
+def white_wins(screen, board, opplives, playerlives):
+    whiteboard = copy.deepcopy(board)
+    whiteboard = blend_into_background(whiteboard, -3, opplives, playerlives)
+    move_pieces.draw_board(board)
+    pygame.display.update()
+    pygame.time.delay(400)
+    recs_fill_screen(WHITE)
+    move_pieces.draw_board(whiteboard, False)
+    pygame.display.update()
+    pygame.time.delay(300)
+    move_pieces.draw_board(board)
+    pygame.display.update()
+    pygame.time.delay(300)
+    recs_fill_screen(WHITE)
+    move_pieces.draw_board(whiteboard, False)
+    pygame.display.update()
+    pygame.time.delay(2000)
+
+def black_wins(screen, board, opplives, playerlives):
+    blackboard = copy.deepcopy(board)
+    blackboard = blend_into_background(blackboard, -2, opplives, playerlives)
+    move_pieces.draw_board(board)
+    pygame.display.update()
+    pygame.time.delay(400)
+    recs_fill_screen(BLACK)
+    move_pieces.draw_board(blackboard, False)
+    pygame.display.update()
+    pygame.time.delay(300)
+    move_pieces.draw_board(board)
+    pygame.display.update()
+    pygame.time.delay(300)
+    recs_fill_screen(BLACK)
+    move_pieces.draw_board(blackboard, False)
+    pygame.display.update()
+    pygame.time.delay(2000)
+
 def lost_level(screen, board, opplives, playerlives):
     redboard = copy.deepcopy(board)
     redboard = blend_into_background(redboard, 809, opplives, playerlives)
@@ -550,3 +586,5 @@ def recs_fill_screen(colour):
     draw_rectangle(width, 200, width, 200, colour, 120)
     draw_rectangle(0, 500, width, 200, colour, 120)
     draw_rectangle(width, 500, width, 200, colour, 60)
+
+

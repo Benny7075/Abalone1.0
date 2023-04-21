@@ -1,6 +1,7 @@
 import math
 import pygame
 import numpy
+import copy
 
 BLACK = [0, 0, 0]
 WHITE = [255, 255, 255]
@@ -149,6 +150,10 @@ def draw_board(board, fillScreen = True):
                 if board[r][c] == 2:
                     pygame.draw.circle(screen, DGREY, (PUSH_COL_POS, ROW_POS), HIGH_RAD)
                     pygame.draw.circle(screen, BLACK,(PUSH_COL_POS, ROW_POS), RADIUS)
+                if board[r][c] == -2:
+                    pygame.draw.circle(screen, BLACK,(PUSH_COL_POS, ROW_POS), RADIUS)
+                if board[r][c] == -3:
+                    pygame.draw.circle(screen, WHITE, (PUSH_COL_POS, ROW_POS), RADIUS)
                 if board[r][c] == 3:
                     pygame.draw.circle(screen, DGREY, (PUSH_COL_POS, ROW_POS), HIGH_RAD)
                     pygame.draw.circle(screen, WHITE, (PUSH_COL_POS, ROW_POS), RADIUS)
@@ -191,6 +196,10 @@ def draw_board(board, fillScreen = True):
                 if board[r][c] == 2:
                     pygame.draw.circle(screen, DGREY, (COL_POS, ROW_POS), HIGH_RAD)
                     pygame.draw.circle(screen, BLACK, (COL_POS, ROW_POS), RADIUS)
+                if board[r][c] == -2:
+                    pygame.draw.circle(screen, BLACK,(COL_POS, ROW_POS), RADIUS)
+                if board[r][c] == -3:
+                    pygame.draw.circle(screen, WHITE, (COL_POS, ROW_POS), RADIUS)
                 if board[r][c] == 3:
                     pygame.draw.circle(screen, DGREY, (COL_POS, ROW_POS), HIGH_RAD)
                     pygame.draw.circle(screen, WHITE, (COL_POS, ROW_POS),RADIUS)
@@ -418,6 +427,207 @@ def see_us_home(screen, circle_center, destination, piece):
     if piece == 3:
         move_circle(screen, circle_center, get_screen_pos(14,2), 3, piece)
         move_circle(screen, get_screen_pos(14,2) , destination, 3, piece)
+
+
+railing = {(2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (3, 2), (3, 8), (4, 1), (4, 8),
+           (5, 1), (5, 9), (6, 0), (6, 9), (7, 0), (7, 10), (8, 0), (8, 9), (9,1), (9, 9),
+           (10, 1), (10, 8), (11, 2), (11, 8), (12, 2), (12, 3), (12, 4), (12, 5), (12, 6), (12, 7)}
+
+def move_piece(screen, board, highlighted, is_shove, shove2, is_slide, start, destination, velocity, piece):
+    if piece == 2:
+        opp_piece = 3
+        opp_colour = WHITE
+        colour = BLACK
+    elif piece == 3:
+        opp_piece = 2
+        colour = WHITE
+        opp_colour = BLACK
+
+    if not is_slide:
+        # Calculate the distance to the destination
+        dx = destination[0] - start[0]
+        dy = destination[1] - start[1]
+        if len(highlighted) == 2:
+            dx = dx/2
+            dy = dy/2
+        if len(highlighted) == 3:
+            dx = dx/3
+            dy = dy/3
+        distance = ((dx ** 2) + (dy ** 2)) ** 0.5
+        if distance == 0:
+            return
+        # Calculate the time it will take to reach the destination
+        time = distance / velocity
+
+        # Calculate the speed for each frame
+        speed_x = dx / time
+        speed_y = dy / time
+        if len(highlighted) == 1:
+            # keep board right
+            x, y = get_board_pos(destination[0], destination[1])
+            ani_board = copy.deepcopy(board)
+            ani_board[x][y] = 1
+            for i in range(int(time)):
+                # Move the circle
+                pos = (start[0] + i * speed_x, start[1] + i * speed_y)
+                draw_board(ani_board)
+                pygame.draw.circle(screen, colour, pos, RADIUS)
+                pygame.display.update()
+                # Wait for a short time to slow down the animation
+                pygame.time.wait(10)
+
+
+        if len(highlighted) == 2:
+            # keep board right
+            x, y = get_board_pos(destination[0], destination[1])
+            ani_board = copy.deepcopy(board)
+            ani_board[x][y] = 1
+            ani_board[highlighted[0][0]][highlighted[0][1]] = 1
+            ani_board[highlighted[1][0]][highlighted[1][1]] = 1
+            if is_shove:
+                x1, y1 = get_board_pos(destination[0] + time * speed_x, destination[1] + time * speed_y)
+                if (x1, y1) in railing:
+                    ani_board[x1][y1] = 9
+                else:
+                    ani_board[x1][y1] = 1
+
+            for i in range(int(time)):
+                # Move the circle
+                s1, s2 = get_screen_pos(highlighted[0][0], highlighted[0][1])
+                t1, t2 = get_screen_pos(highlighted[1][0], highlighted[1][1])
+                draw_board(ani_board)
+                if is_shove:
+                    pos3 = (destination[0] + i * speed_x, destination[1] + i * speed_y)
+                    pygame.draw.circle(screen, opp_colour, pos3, RADIUS)
+                pos1 = (s1 + i * speed_x, s2 + i * speed_y)
+                pos2 = (t1 + i * speed_x, t2 + i * speed_y)
+                pygame.draw.circle(screen, colour, pos1, RADIUS)
+                pygame.draw.circle(screen, colour, pos2, RADIUS)
+                pygame.display.update()
+                # Wait for a short time to slow down the animation
+                pygame.time.wait(10)
+
+        if len(highlighted) == 3:
+            x1, y1 = get_board_pos(destination[0] +  time * speed_x, destination[1] + time * speed_y)
+            # keep board right
+            x, y = get_board_pos(destination[0], destination[1])
+            ani_board = copy.deepcopy(board)
+            ani_board[x][y] = 1
+            ani_board[highlighted[0][0]][highlighted[0][1]] = 1
+            ani_board[highlighted[1][0]][highlighted[1][1]] = 1
+            ani_board[highlighted[2][0]][highlighted[2][1]] = 1
+            if is_shove:
+                if (x1, y1) in railing:
+                    ani_board[x1][y1] = 9
+                else:
+                    ani_board[x1][y1] = 1
+            if shove2:
+                x2, y2 = get_board_pos(destination[0] + 2*time * speed_x, destination[1] + 2*time * speed_y)
+                if (x2, y2) in railing:
+                    ani_board[x2][y2] = 9
+                else:
+                    ani_board[x2][y2] = 1
+            for i in range(int(time)):
+                # Move the circles
+                s1, s2 = get_screen_pos(highlighted[0][0], highlighted[0][1])
+                t1, t2 = get_screen_pos(highlighted[1][0], highlighted[1][1])
+                u1, u2 = get_screen_pos(highlighted[2][0], highlighted[2][1])
+                draw_board(ani_board)
+                if is_shove:
+                    pos4 = (destination[0] + i * speed_x, destination[1] + i * speed_y)
+                    pygame.draw.circle(screen, opp_colour, pos4, RADIUS)
+                if shove2:
+                    pos5 = ((destination[0] + time * speed_x) + i * speed_x, (destination[1] + time * speed_y) + i * speed_y)
+                    #pos5 = (destination[0] + 2*i * speed_x, destination[1] + 2*i * speed_y)
+                    pygame.draw.circle(screen, opp_colour, pos5, RADIUS)
+                pos1 = (s1 + i * speed_x, s2 + i * speed_y)
+                pos2 = (t1 + i * speed_x, t2 + i * speed_y)
+                pos3 = (u1 + i * speed_x, u2 + i * speed_y)
+                pygame.draw.circle(screen, colour, pos1, RADIUS)
+                pygame.draw.circle(screen, colour, pos2, RADIUS)
+                pygame.draw.circle(screen, colour, pos3, RADIUS)
+                pygame.display.update()
+                # Wait for a short time to slow down the animation
+                pygame.time.wait(10)
+
+    if is_slide:
+        # Calculate the distance to the destination
+        desx, desy = get_screen_pos(destination[0][0], destination[0][1])
+        startx, starty = get_screen_pos(start[0][0], start[0][1])
+        dx = desx - startx
+        dy = desy - starty
+        distance = ((dx ** 2) + (dy ** 2)) ** 0.5
+        if distance == 0:
+            return
+        # Calculate the time it will take to reach the destination
+        time = distance / velocity
+
+        # Calculate the speed for each frame
+        speed_x = dx / time
+        speed_y = dy / time
+
+        if len(highlighted) == 2:
+            # keep board right
+            ani_board = copy.deepcopy(board)
+            ani_board[destination[0][0]][destination[0][1]] = 1
+            ani_board[destination[1][0]][destination[1][1]] = 1
+            for i in range(int(time)):
+                s1, s2 = get_screen_pos(start[1][0], start[1][1])
+                pos1 = (startx + i * speed_x, starty + i * speed_y)
+                pos2 = (s1 + i * speed_x, s2 + i * speed_y)
+                draw_board(ani_board)
+                pygame.draw.circle(screen, colour, pos1, RADIUS)
+                pygame.draw.circle(screen, colour, pos2, RADIUS)
+                pygame.display.update()
+                # Wait for a short time to slow down the animation
+                pygame.time.wait(10)
+        elif len(highlighted) == 3:
+            # keep board right
+            ani_board = copy.deepcopy(board)
+            ani_board[destination[0][0]][destination[0][1]] = 1
+            ani_board[destination[1][0]][destination[1][1]] = 1
+            ani_board[destination[2][0]][destination[2][1]] = 1
+            for i in range(int(time)):
+                s1, s2 = get_screen_pos(start[1][0], start[1][1])
+                s_1, s_2 = get_screen_pos(start[2][0], start[2][1])
+                pos1 = (startx + i * speed_x, starty + i * speed_y)
+                pos2 = (s1 + i * speed_x, s2 + i * speed_y)
+                pos3 = (s_1 + i * speed_x, s_2 + i * speed_y)
+                draw_board(ani_board)
+                pygame.draw.circle(screen, colour, pos1, RADIUS)
+                pygame.draw.circle(screen, colour, pos2, RADIUS)
+                pygame.draw.circle(screen, colour, pos3, RADIUS)
+                pygame.display.update()
+                # Wait for a short time to slow down the animation
+                pygame.time.wait(10)
+
+
+# takes in board after move has been played
+def animate_move(board, move, highlghted, velocity, piece):
+    if len(move) == 2 and not isinstance(move[0][0], int):
+        move_piece(screen, board, highlghted, False, False, True, move[0], move[1], velocity, piece)
+    else:
+        if len(move) == 3:
+            if is_it_shove2(move):
+                move_piece(screen, board, highlghted, True, True, False, get_screen_pos(move[0][0], move[0][1]), get_screen_pos(move[1][0], move[1][1]), velocity, piece)
+            else:
+                move_piece(screen, board, highlghted, True, False, False, get_screen_pos(move[0][0], move[0][1]), get_screen_pos(move[1][0], move[1][1]), velocity, piece)
+
+        else:
+            move_piece(screen, board, highlghted, False, False, False, get_screen_pos(move[0][0], move[0][1]), get_screen_pos(move[1][0], move[1][1]), velocity, piece)
+
+
+def is_it_shove2(move):
+    swap = move[1]
+    end = move[2]
+    if abs(swap[0] - end[0]) >= 2 or abs(swap[1] - end[1]) >= 2:
+        return True
+    return False
+
+def get_highlighted_from_AI(move):
+    if len(move) == 2 and not isinstance(move[0][0], int):
+        return move[0]
+
 
 def calculate_health(time_to_zero, start_time):
     # Set up the health bar

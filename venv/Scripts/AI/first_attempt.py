@@ -21,77 +21,38 @@ randomlist.append(random.randint(8, 12))
 randomlist.append(random.randint(800, 1200))
 randomlist.append(random.randint(700, 1100))
 
-def get_center_value(row, col, randomlist = [], random = False):
+center_values = {
+        (7, 5): 2,
+        (6, 5): 1.6, (8, 5): 1.6, (7, 4): 1.6, (7, 6): 1.6, (6, 4): 1.6, (8, 4): 1.6,
+        (5, 6): 1.3, (9, 6): 1.3, (5, 5): 1.3, (9, 5): 1.3, (7, 7): 1.3,
+        (5, 4): 1.3, (9, 4): 1.3, (6, 3): 1.3, (8, 3): 1.3, (6, 6): 1.3, (8, 6): 1.3,
+        (7, 3): 1.3, (4, 6): 1, (10, 6): 1, (4, 5): 1,
+        (10, 5): 1, (4, 4): 1, (10, 4): 1, (4, 3): 1,
+        (10, 3): 1, (5, 7): 1, (9, 7): 1, (6, 2): 1,
+        (8, 2): 1, (7, 2): 1, (9, 3): 1, (5, 3): 1, (6, 7): 1, (8, 7): 1, (7, 8): 1
+    }
+
+random_centers = {
+        (7, 5): randomlist[0]/10,
+        (6, 5): randomlist[1]/10, (8, 5): randomlist[1]/10, (7, 4): randomlist[1]/10, (7, 6): randomlist[1]/10, (6, 4): randomlist[1]/10, (8, 4): randomlist[1]/10,
+        (5, 6): randomlist[2]/10, (9, 6): randomlist[2]/10, (5, 5): randomlist[2]/10, (9, 5): randomlist[2]/10, (7, 7): randomlist[2]/10,
+        (5, 4): randomlist[2]/10, (9, 4): randomlist[2]/10, (6, 3): randomlist[2]/10, (8, 3): randomlist[2]/10, (6, 6): randomlist[2]/10, (8, 6): randomlist[2]/10,
+        (7, 3): randomlist[2]/10, (4, 6): randomlist[3]/10, (10, 6): randomlist[3]/10, (4, 5): randomlist[3]/10,
+        (10, 5): randomlist[3]/10, (4, 4): randomlist[3]/10, (10, 4): randomlist[3]/10, (4, 3): randomlist[3]/10,
+        (10, 3): randomlist[3]/10, (5, 7): randomlist[3]/10, (9, 7): randomlist[3]/10, (6, 2): randomlist[3]/10,
+        (8, 2): randomlist[3]/10, (7, 2): randomlist[3]/10, (9, 3): randomlist[3]/10, (5, 3): randomlist[3]/10, (6, 7): randomlist[3]/10, (8, 7): randomlist[3]/10, (7, 8): randomlist[3]/10
+}
+
+def get_center_value(row, col, random = False):
     if not random:
-        # center
-        if row == 7 and col == 5:
-            return 2
-
-        # layer 1
-        elif (row == 6 or row == 8) and (col == 5 or col == 4):
-            return 1.6
-        elif row == 7 and (col == 4 or col == 6):
-            return 1.6
-
-        # layer 2
-        elif (row == 5 or row == 9) and (col == 6 or col == 5 or col == 4):
-            return 1.3
-        elif (row == 6 or row == 8) and (col == 3 or col == 6):
-            return 1.3
-        elif row == 7 and (col == 3 or col == 7):
-            return 1.3
-
-        # layer 3
-        elif (row == 4 or row == 10) and (col == 6 or col == 5 or col == 4 or col == 3):
-            return 1
-        elif (row == 5 or row == 9) and (col == 7 or col == 3):
-            return 1
-        elif (row == 6 or row == 8) and (col == 2 or col == 7):
-            return 1
-        elif row == 7 and (col == 2 or col == 8):
-            return 1
-
-        # outer layer
-        else:
-            return -1
+        return center_values.get((row, col), -1)
     else:
-        # center
-        if row == 7 and col == 5:
-            return randomlist[0]/10
-
-        # layer 1
-        elif (row == 6 or row == 8) and (col == 5 or col == 4):
-            return randomlist[1]/10
-        elif row == 7 and (col == 4 or col == 6):
-            return randomlist[1]/10
-
-        # layer 2
-        elif (row == 5 or row == 9) and (col == 6 or col == 5 or col == 4):
-            return randomlist[2]/10
-        elif (row == 6 or row == 8) and (col == 3 or col == 6):
-            return randomlist[2]/10
-        elif row == 7 and (col == 3 or col == 7):
-            return randomlist[2]/10
-
-        # layer 3
-        elif (row == 4 or row == 10) and (col == 6 or col == 5 or col == 4 or col == 3):
-            return randomlist[3]/10
-        elif (row == 5 or row == 9) and (col == 7 or col == 3):
-            return randomlist[3]/10
-        elif (row == 6 or row == 8) and (col == 2 or col == 7):
-            return randomlist[3]/10
-        elif row == 7 and (col == 2 or col == 8):
-            return randomlist[3]/10
-
-        # outer layer
-        else:
-            return -1
+        return random_centers.get((row, col), -1)
 
 
 
 def evaluate_pos1(board, piece):
-    piececount = 0
-    opp_piececount = 0
+
     if piece == 2:
         opp_piece = 3
     elif piece == 3:
@@ -156,21 +117,6 @@ def ball_on_rail(positions, piece):
     return False
 
 
-
-def winning_move(positions, piece):
-    if piece == 2:
-        opp_piece = 3
-    elif piece == 3:
-        opp_piece = 2
-    if piece == 2:
-        if board[14][3] != 50 and ball_on_rail(positions, opp_piece):
-            return True
-    elif piece == 3:
-        if board[0][6] != 60 and ball_on_rail(positions, opp_piece):
-            return True
-
-def is_terminal_node(positions):
-    return winning_move(positions, 2) or winning_move(positions, 3)
 
 
 def iterative_deepener(timelimit, board, alpha, beta, piece):
