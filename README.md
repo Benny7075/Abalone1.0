@@ -1,6 +1,6 @@
 # Abalone Board Game Prototype
 
-![Abalone Game Image](abalone-game.png)
+![Abalone Gameplay](Abalone_gameplay.jpg)
 
 Welcome to my fully functional prototype of the classic board game Abalone.
 
