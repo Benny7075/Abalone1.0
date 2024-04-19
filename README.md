@@ -1,6 +1,6 @@
 # Abalone Board Game Prototype
 
-![Abalone Gameplay](Abalone_gameplay.jpg)
+<img src="Abalone_gameplay.jpg" alt="Abalone Gameplay" width="40%">
 
 Welcome to my fully functional prototype of the classic board game Abalone.
 
