@@ -8,7 +8,7 @@ Welcome to my fully functional prototype of the classic board game Abalone.
 
 - Accurately replicates the original Abalone game design and rules
 - Pretty animations for piece moves, when pieces get knocked off and when the game ends
-- Hexagonal game board with 61 spaces
+- Simply drag to highlight the piece(s) you want to move and the move options are displayed instantly in green(straight), blue(slide) and red(push).
 - Option to play 2 player (top left of menu) or against a challenging AI (top right of menu)
 - 61 levels that go green when completed, some have time restrictions or limited moves (bottom left of menu) (unfinished, only first 3 levels implemented)
 - Sandbox mode so you can construct and analyse positions (bottom right of menu)
